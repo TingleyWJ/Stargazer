@@ -1,0 +1,17 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{081AFF73-44B9-71E0-F8CA-C4A347A5E850}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "Stargazer",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule"
+			]
+		}
+	]
+}
