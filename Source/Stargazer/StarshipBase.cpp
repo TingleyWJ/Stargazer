@@ -3,49 +3,46 @@
 #include "StarshipBase.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/Controller.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Engine/World.h"
-#include "TimerManager.h"
-#include "StarshipController.h"
-#include "ProjectileBase.h"
+#include "PlayerStarshipControllerBase.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SphereComponent.h"
 
 // Sets default values
-AStarshipBase::AStarshipBase()
+AStarshipBase::AStarshipBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	turnRate = 0.25f;
-	rollRate = 10.0f;
-
+	shipHealth = 100;
+	shipShields = 100;
 	shipHalfLength = 50.f;
 
 	isFiring = false;
 	shotsPerSecond = 5;
 	fireRate = 1.0f / shotsPerSecond;
 
-	GetCharacterMovement()->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
-
-	GetCharacterMovement()->MaxAcceleration = 12000.f;
-	GetCharacterMovement()->MaxFlySpeed = 8000.f;
-	GetCharacterMovement()->BrakingDecelerationFlying = 4000.f;
-
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationRoll = true;
 	bUseControllerRotationYaw = true;
-	//GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("N/A"));
+	RootComponent = SphereCollision;
+
+	SphereCollision->CanCharacterStepUpOn = ECB_No;
+	SphereCollision->BodyInstance.SetCollisionProfileName("Pawn");
+
+	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("The Name Doesn't Matter"));
+	StaticMesh->SetupAttachment(SphereCollision);
+
+	FloatingMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Ok Gotta Have New Names"));
+
+	FloatingMovement->MaxSpeed = 8000.0f;
+	FloatingMovement->Acceleration = 12000.0f;
+	FloatingMovement->Deceleration = 4000.0f;
+	FloatingMovement->TurningBoost = 0.0f;
 }
 
 // Called to bind functionality to input
 void AStarshipBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	PlayerInputComponent->BindAxis("Thrust", this, &AStarshipBase::Thrust);
-	PlayerInputComponent->BindAxis("ThrustStrafe", this, &AStarshipBase::ThrustStrafe);
-
-	PlayerInputComponent->BindAxis("Turn", this, &AStarshipBase::Turn);
-	PlayerInputComponent->BindAxis("LookUp", this, &AStarshipBase::LookUp);
-
-	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AStarshipBase::ToggleShoot);
-	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &AStarshipBase::ToggleShoot);
+	UE_LOG(LogTemp, Log, TEXT("StarshipBase SetUpPlayerInputComponent Called"));
 }
 
 // Called when the game starts or when spawned
@@ -85,63 +82,48 @@ void AStarshipBase::Tick(float DeltaTime)
 	}*/
 }
 
-void AStarshipBase::Thrust(float value)
+bool AStarshipBase::ToggleShoot(bool status)
 {
-	if (Controller != NULL && value != 0.0f)
-	{
-		//if (GetCharacterMovement()->getspeed)
-		AddMovementInput(FRotationMatrix(Controller->GetControlRotation()).GetUnitAxis(EAxis::X), value);
-	}
-}
-
-void AStarshipBase::ThrustStrafe(float value)
-{
-	if (Controller != NULL && value != 0.0f)
-	{
-		AddMovementInput(FRotationMatrix(Controller->GetControlRotation()).GetUnitAxis(EAxis::Y), value);
-	}
-}
-
-void AStarshipBase::Turn(float value)
-{
-	if (Controller != NULL && value != 0.0f)
-	{
-		AddControllerYawInput(value * turnRate);
-	}
-}
-
-void AStarshipBase::LookUp(float value)
-{
-	if (Controller != NULL && value != 0.0f)
-	{
-		AddControllerPitchInput(value * turnRate);
-	}
-}
-
-void AStarshipBase::ToggleShoot()
-{
-	isFiring = !isFiring;
+	UE_LOG(LogTemp, Warning, TEXT("StarshipBase ToggleShoot Called"));
+	return false;
+	/*isFiring = !isFiring;
 	if (isFiring)
 	{
 		GetWorld()->GetTimerManager().SetTimer(ShootHandle, this, &AStarshipBase::Shoot, fireRate, true);
+		Shoot();
 		//UE_LOG(LogTemp, Log, TEXT("Fire ON, FireRate is: %f"), GetWorld()->GetTimerManager().GetTimerRate(ShootHandle));
 	}
 	else
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ShootHandle);
 		//UE_LOG(LogTemp, Log, TEXT("Fire OFF"));
-	}
+	}*/
 }
 
 void AStarshipBase::Shoot()
 {
-	if (Controller != NULL && GetWorld()->GetTimerManager().IsTimerActive(ShootHandle))
+	UE_LOG(LogTemp, Warning, TEXT("StarshipBase Shoot Called"));
+	/*if (Controller != NULL && GetWorld()->GetTimerManager().IsTimerActive(ShootHandle))
 	{
 		FVector location = GetActorLocation() + GetActorForwardVector() * shipHalfLength;
 		FRotator rotation = GetActorRotation(); // (0.0f, 0.0f, 0.0f);
 		FActorSpawnParameters spawnInfo;
+
+		if (!ensure(ProjectileSpawn)) { return; }
+
 		AProjectileBase *projBase = GetWorld()->SpawnActor<AProjectileBase>(ProjectileSpawn, location, rotation, spawnInfo);
 
-		projBase->direction = GetActorForwardVector();
-	}
+		FRotator rot = GetActorRotation();
+		FVector veloc = rot.UnrotateVector(GetVelocity();//);
+
+		//Veloc covers the negative, need any multipliers to be positive
+		float scalar = FMath::Abs(veloc.Y / FloatingMovement->GetMaxSpeed());
+		veloc.Normalize();
+
+		projBase->direction = GetActorForwardVector() + (0.75f * scalar * veloc);
+
+		//UE_LOG(LogTemp, Log, TEXT("Yaw: %f"), GetActorRotation().Yaw);
+		//UE_LOG(LogTemp, Log, TEXT("Scalar: %f"), scalar);
+		//UE_LOG(LogTemp, Log, TEXT("Forward Vec: %s, Veloc: %s, Dir: %s"), *(GetActorForwardVector().ToString()), *(veloc.ToString()), *(projBase->direction.ToString()));
+	}*/
 }

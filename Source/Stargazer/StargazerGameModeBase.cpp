@@ -5,8 +5,8 @@
 
 AStargazerGameModeBase::AStargazerGameModeBase()
 {
-	static ConstructorHelpers::FClassFinder<APawn> PCharacterClass(TEXT("/Game/Blueprints/StarshipBase"));
-	static ConstructorHelpers::FClassFinder<AController> PControllerClass(TEXT("/Game/Blueprints/StarshipController"));
+	static ConstructorHelpers::FClassFinder<APawn> PCharacterClass(TEXT("/Game/Blueprints/Player/Player"));
+	static ConstructorHelpers::FClassFinder<AController> PControllerClass(TEXT("/Game/Blueprints/Player/PlayerStarshipController"));
 
 	if (PCharacterClass.Class != NULL)
 	{
