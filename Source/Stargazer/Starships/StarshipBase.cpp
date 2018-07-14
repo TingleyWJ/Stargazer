@@ -3,7 +3,7 @@
 #include "StarshipBase.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/Controller.h"
-#include "PlayerStarshipControllerBase.h"
+#include "../Controllers/PlayerStarshipControllerBase.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 

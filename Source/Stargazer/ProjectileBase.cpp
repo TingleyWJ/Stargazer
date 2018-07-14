@@ -5,7 +5,7 @@
 #include "TimerManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SceneComponent.h"
-#include "StarshipBase.h"
+#include "Starships/StarshipBase.h"
 
 // Sets default values
 AProjectileBase::AProjectileBase()
